@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# bin/detect <build-dir>
+
+set -e
+
+BUILD_DIR="${1}"
+readonly BUILD_DIR
+
+
+if [ -f "${BUILD_DIR}/run.R" ] \
+    || [ -f "${BUILD_DIR}/app.R" ] \
+    || [ -f "${BUILD_DIR}/plumber.R" ] \
+    || [ -f "${BUILD_DIR}/init.r" ] \
+    || [ -f "${BUILD_DIR}/init.R" ] \
+    || [ -f "${BUILD_DIR}/R-packages" ]; then
+    echo "R"
+else
+    exit 1
+fi
+
+exit 0

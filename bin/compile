@@ -1,0 +1,181 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+if [ -n "${BUILDPACK_DEBUG}" ]
+then
+    set -x
+fi
+
+readonly BUILD_DIR="${1}"
+readonly CACHE_DIR="${2}"
+readonly ENV_DIR="${3}"
+
+BASE_DIR="$( cd -P "$( dirname "$0" )" && pwd )"
+readonly BASE_DIR
+
+BUILDPACK_DIR="$( readlink -f "${BASE_DIR}/.." )"
+readonly BUILDPACK_DIR
+
+readonly TMP_DIR="/tmp"
+
+readonly R_VERSION="${R_VERSION:-4.0.0}"
+readonly r_url="https://cran.r-project.org"
+readonly r_base_url="${r_url}/src/base"
+readonly r_package_url="${r_url}/package=%s&version=%s"
+
+readonly gfortran_package="gfortran-10"
+
+readonly APT_FILE_MANIFEST="${APT_FILE_MANIFEST:-Aptfile.R}"
+export APT_FILE_MANIFEST
+
+
+# ----
+# Install gfortran to compile R
+
+# Use Apt buildpack to install gfortran
+cat <<EOF >>"${BUILD_DIR}/${APT_FILE_MANIFEST}"
+${gfortran_package}
+libgomp1
+EOF
+
+cd "${HOME}"
+apt_deps_buildpack_dir="$( mktemp apt_buildpack_XXXX )"
+# We only need a random name, so we can safely delete the file:
+rm "${apt_deps_buildpack_dir}"
+
+readonly apt_buildpack_url="https://github.com/Scalingo/apt-buildpack.git"
+git clone --depth=1 "${apt_buildpack_url}" "${apt_deps_buildpack_dir}"
+
+"${apt_deps_buildpack_dir}/bin/compile" \
+    "${BUILD_DIR}" "${CACHE_DIR}" "${ENV_DIR}"
+
+
+# Check if the apt-buildpack left behind an environment for
+# subsequent ones:
+if [ -e "${HOME}/${apt_deps_buildpack_dir}/export" ]; then
+    source "${HOME}/${apt_deps_buildpack_dir}/export"
+fi
+
+PATH="\$HOME/.apt/bin/x86_64-linux-gnu-gfortran:${PATH}"
+export PATH
+
+
+# ----
+# Download and compile R
+
+curl --silent --location \
+    --retry 6 --retry-connrefused --retry-delay 0 \
+    "${r_base_url}/R-${R_VERSION:0:1}/R-${R_VERSION}.tar.gz" \
+    --output "${CACHE_DIR}/R-${R_VERSION}.tar.gz"
+
+tar --extract --gzip --verbose --file="${CACHE_DIR}/R-${R_VERSION}.tar.gz" \
+    --directory "${CACHE_DIR}"
+
+pushd "${CACHE_DIR}/R-${R_VERSION}"
+
+./configure \
+    FC="${gfortran_package}" LIBnn=lib \
+    --prefix="${BUILD_DIR}/R-${R_VERSION}" \
+    --libdir="${BUILD_DIR}/R-${R_VERSION}/lib" \
+    --enable-java=no \
+    --enable-R-shlib=yes \
+    --with-recommended-packages=no \
+    --without-x
+
+make FC="${gfortran_package}" -j8
+make install rhome="/app/R-${R_VERSION}"
+make clean
+
+popd
+
+# `make install` put things in /app/R-version, which is likely to be removed.
+# So we copy these things back in $BUILD_DIR which is then "deployed" in /app
+cp -a "/app/R-${R_VERSION}/." "${BUILD_DIR}/R-${R_VERSION}/"
+
+
+pushd "${BUILD_DIR}"
+ln --symbolic --no-dereference --force "R-${R_VERSION}" "R"
+popd
+
+
+# ---
+# Writing profile script
+
+mkdir -p "${BUILD_DIR}/.profile.d"
+
+cat <<EOF >"${BUILD_DIR}/.profile.d/050-R.sh"
+export PATH="\$HOME/R/bin:\$HOME/.apt/usr/bin:\$HOME/.apt/usr/sbin:\$PATH"
+export LD_LIBRARY_PATH="\$HOME/.apt/lib/x86_64-linux-gnu:\$HOME/.apt/usr/lib/x86_64-linux-gnu:\$HOME/.apt/usr/lib/i386-linux-gnu:\$HOME/.apt/lib:\$HOME/.apt/usr/lib:\$LD_LIBRARY_PATH"
+export LIBRARY_PATH="\$HOME/.apt/lib/x86_64-linux-gnu:\$HOME/.apt/usr/lib/x86_64-linux-gnu:\$HOME/.apt/usr/lib/i386-linux-gnu:\$HOME/.apt/lib:\$HOME/.apt/usr/lib:\$LIBRARY_PATH"
+export INCLUDE_PATH="\$HOME/.apt/usr/include:\$HOME/.apt/usr/include/x86_64-linux-gnu:\$INCLUDE_PATH"
+export CPATH="\$INCLUDE_PATH"
+export CPPPATH="\$INCLUDE_PATH"
+export PKG_CONFIG_PATH="\$HOME/.apt/usr/lib/x86_64-linux-gnu/pkgconfig:\$HOME/.apt/usr/lib/i386-linux-gnu/pkgconfig:\$HOME/.apt/usr/lib/pkgconfig:\$PKG_CONFIG_PATH"
+export R_LIBS="\$HOME/R/library"
+export R_LIBS_USER="\$R_LIBS"
+EOF
+
+export PATH="$BUILD_DIR/R/bin:$BUILD_DIR/.apt/usr/bin:$BUILD_DIR/.apt/usr/sbin:$PATH"
+export LD_LIBRARY_PATH="$BUILD_DIR/.apt/lib/x86_64-linux-gnu:$BUILD_DIR/.apt/usr/lib/x86_64-linux-gnu:$BUILD_DIR/.apt/usr/lib/i386-linux-gnu:$BUILD_DIR/.apt/lib:$BUILD_DIR/.apt/usr/lib:$LD_LIBRARY_PATH"
+export LIBRARY_PATH="$BUILD_DIR/.apt/lib/x86_64-linux-gnu:$BUILD_DIR/.apt/usr/lib/x86_64-linux-gnu:$BUILD_DIR/.apt/usr/lib/i386-linux-gnu:$BUILD_DIR/.apt/lib:$BUILD_DIR/.apt/usr/lib:$LIBRARY_PATH"
+export INCLUDE_PATH="$BUILD_DIR/.apt/usr/include:$BUILD_DIR/.apt/usr/include/x86_64-linux-gnu:$INCLUDE_PATH"
+export CPATH="$INCLUDE_PATH"
+export CPPPATH="$INCLUDE_PATH"
+export PKG_CONFIG_PATH="$BUILD_DIR/.apt/usr/lib/x86_64-linux-gnu/pkgconfig:$BUILD_DIR/.apt/usr/lib/i386-linux-gnu/pkgconfig:$BUILD_DIR/.apt/usr/lib/pkgconfig:$PKG_CONFIG_PATH"
+
+
+# ---
+# Installing packages
+
+if [ -f "${BUILD_DIR}/R-packages" ]; then
+
+    while IFS=" " read -r pkg_name pkg_version; do
+
+        version="${pkg_version:-latest}"
+
+        if [ "${version}" = "*" ]; then
+            version="latest"
+        fi
+
+        echo "-----> Installing package ${pkg_name} (${pkg_version})..."
+
+        if [ "${version}" = "latest" ]; then
+            # In this case, R is smart enough to handle the dependencies.
+            # Also, we don't want cache.
+            R -e "install.packages('${pkg_name}', \
+                '${BUILD_DIR}/R-${R_VERSION}/library', repos='${r_url}')"
+        else
+            if [ -f "${CACHE_DIR}/${pkg_name}_${pkg_version}.tar.gz" ]; then
+                tar --extract --verbose --gzip \
+                    --file="${CACHE_DIR}/${pkg_name}_${pkg_version}.tar.gz" \
+                    --directory="${BUILD_DIR}/R-${R_VERSION}/library/"
+
+                echo "Fetched from cache."
+            else
+                echo "Downloading ${pkg_name}_${pkg_version}.tar.gz."
+                printf -v pkg_url \
+                    "${r_package_url}" "${pkg_name}" "${pkg_version}"
+
+                curl --silent --location \
+                    --retry 6 --retry-connrefused --retry-delay 0 \
+                    "${pkg_url}" \
+                    --output "${TMP_DIR}/${pkg_name}_${pkg_version}.tar.gz"
+
+                echo "Installing."
+                R CMD INSTALL \
+                    -l "${BUILD_DIR}/R-${R_VERSION}/library" \
+                    --no-html \
+                    "${TMP_DIR}/${pkg_name}_${pkg_version}.tar.gz"
+
+                echo "Moving to cache."
+                tar --create --verbose --gzip \
+                    --file="${CACHE_DIR}/${pkg_name}_${pkg_version}.tar.gz" \
+                    --directory="${BUILD_DIR}/R-${R_VERSION}/library" \
+                    "${pkg_name}"
+            fi
+        fi
+    done < "${BUILD_DIR}/R-packages"
+fi
+
+echo "Done."
