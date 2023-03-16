@@ -143,7 +143,7 @@ if [ -f "${BUILD_DIR}/R-packages" ]; then
         if [ "${version}" = "latest" ]; then
             # In this case, R is smart enough to handle the dependencies.
             # Also, we don't want cache.
-            R --no-init-file -e "install.packages('${pkg_name}', \
+            R --use-vanilla -e "install.packages('${pkg_name}', \
                 '${BUILD_DIR}/R-${R_VERSION}/library', repos='${r_url}')"
         else
             if [ -f "${CACHE_DIR}/${pkg_name}_${pkg_version}.tar.gz" ]; then
@@ -164,7 +164,7 @@ if [ -f "${BUILD_DIR}/R-packages" ]; then
 
                 echo "Installing."
                 R CMD INSTALL  \
-                    --no-init-file \
+                    --use-vanilla \
                     -l "${BUILD_DIR}/R-${R_VERSION}/library" \
                     --no-html \
                     "${TMP_DIR}/${pkg_name}_${pkg_version}.tar.gz"
