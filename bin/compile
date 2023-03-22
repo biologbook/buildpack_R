@@ -25,14 +25,14 @@ readonly r_base_url="${r_url}/src/base"
 readonly r_package_url="${r_url}/package=%s&version=%s"
 
 readonly gfortran_package="gfortran-10"
-
 readonly APT_FILE_MANIFEST="${APT_FILE_MANIFEST:-inst/scalingo/Aptfile.R}"
 export APT_FILE_MANIFEST
 
 
 # ----
 # Install gfortran to compile R
-
+echo t"test echo"
+echo $(ls)
 # Use Apt buildpack to install gfortran
 cat <<EOF >>"${BUILD_DIR}/${APT_FILE_MANIFEST}"
 ${gfortran_package}
