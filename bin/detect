@@ -7,6 +7,7 @@ set -e
 BUILD_DIR="${1}"
 readonly BUILD_DIR
 
+echo $(ls)
 
 if [ -f "${BUILD_DIR}/run.R" ] \
     || [ -f "${BUILD_DIR}/app.R" ] \
