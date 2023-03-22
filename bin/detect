@@ -14,7 +14,7 @@ if [ -f "${BUILD_DIR}/run.R" ] \
     || [ -f "${BUILD_DIR}/plumber.R" ] \
     || [ -f "${BUILD_DIR}/init.r" ] \
     || [ -f "${BUILD_DIR}/init.R" ] \
-    || [ -f "${BUILD_DIR}/inst/scalingo/R-packages" ]; then
+    || [ -f "${BUILD_DIR}/init.R" ]; then
     echo "R"
 else
     exit 1
