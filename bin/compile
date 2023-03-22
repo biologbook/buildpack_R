@@ -26,7 +26,7 @@ readonly r_package_url="${r_url}/package=%s&version=%s"
 
 readonly gfortran_package="gfortran-10"
 
-readonly APT_FILE_MANIFEST="${APT_FILE_MANIFEST:-Aptfile.R}"
+readonly APT_FILE_MANIFEST="${APT_FILE_MANIFEST:-inst/scalingo/Aptfile.R}"
 export APT_FILE_MANIFEST
 
 
@@ -128,7 +128,7 @@ export PKG_CONFIG_PATH="$BUILD_DIR/.apt/usr/lib/x86_64-linux-gnu/pkgconfig:$BUIL
 # ---
 # Installing packages
 
-if [ -f "${BUILD_DIR}/R-packages" ]; then
+if [ -f "${BUILD_DIR}/inst/scalingo/R-packages" ]; then
 
     while IFS=" " read -r pkg_name pkg_version; do
 
@@ -176,7 +176,7 @@ if [ -f "${BUILD_DIR}/R-packages" ]; then
                     "${pkg_name}"
             fi
         fi
-    done < "${BUILD_DIR}/R-packages"
+    done < "${BUILD_DIR}/inst/scalingo/R-packages"
 fi
 
 echo "Done."
