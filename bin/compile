@@ -56,7 +56,7 @@ if [ -f "${CACHE_DIR}/R-compiled-${R_VERSION}.tar.gz" ]; then
     tar --extract  --gzip \
         --file="${CACHE_DIR}/R-compiled-${R_VERSION}.tar.gz" \
         --directory="/app/R-${R_VERSION}"
-
+    ls "/app/R-${R_VERSION}"
     echo "----------------------------------->R fetchted from cache" $(date)
 else
     echo "----------------------------------->Install gfortran" $(date)
