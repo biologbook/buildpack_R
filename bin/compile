@@ -130,8 +130,8 @@ EOF
     echo "----------------------------------->Archiving R version" $(date)
     tar --create  --gzip \
                         --file="${CACHE_DIR}/R-compiled-${R_VERSION}.tar.gz" \
-                        --directory="/app/R-${R_VERSION}"
-                        "."
+                        --directory="/app/R-${R_VERSION}" \
+                        .
     echo "----------------------------------->make clean" $(date)                    
     make clean
     
