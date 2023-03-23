@@ -192,7 +192,7 @@ if [ -f "${BUILD_DIR}/R-packages" ]; then
                     "${pkg_name}"
             fi
         fi
-    done < "${BUILD_DIR}/inst/scalingo/R-packages"
+    done < "${BUILD_DIR}/R-packages"
 fi
 
 echo "Done."
