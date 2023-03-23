@@ -128,7 +128,7 @@ else
     make clean
     
     popd
-
+fi
 
 
 # `make install` put things in /app/R-version, which is likely to be removed.
