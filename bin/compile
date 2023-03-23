@@ -163,7 +163,7 @@ if [ -f "${BUILD_DIR}/R-packages" ]; then
                 '${BUILD_DIR}/R-${R_VERSION}/library', repos='${r_url}')"
         else
             if [ -f "${CACHE_DIR}/${pkg_name}_${pkg_version}.tar.gz" ]; then
-                tar --extract --verbose --gzip \
+                tar --extract  --gzip \
                     --file="${CACHE_DIR}/${pkg_name}_${pkg_version}.tar.gz" \
                     --directory="${BUILD_DIR}/R-${R_VERSION}/library/"
 
