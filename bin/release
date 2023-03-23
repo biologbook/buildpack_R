@@ -7,16 +7,10 @@ set -e
 BUILD_DIR="${1}"
 readonly BUILD_DIR
 
+echo ${BUILD_DIR}
 
-if [ -f "${BUILD_DIR}/run.R" ]; then
-    cat <<EOF
----
-default_process_types:
-  web: R --file=/app/run.R --gui-none --no-save
-  console: R --no-save
-EOF
 
-elif [ -f "${BUILD_DIR}/app.R" ]; then
+if [ -f "${BUILD_DIR}/app.R" ]; then
     cat <<EOF
 ---
 default_process_types:
@@ -24,11 +18,28 @@ default_process_types:
   web: R --file=/app/app.R --gui-none --no-save
 EOF
 
+
+elif [ -f "${BUILD_DIR}/app/app.R" ]; then
+    cat <<EOF
+---
+default_process_types:
+  console: R --no-save -e "print('Bio Logbook started')"
+  web: R --file=/app/app.R --gui-none --no-save
+EOF
+
+elif [ -f "${BUILD_DIR}/biologbook/scripts/RestRserveAPI.R" ]; then
+    cat <<EOF
+---
+default_process_types:
+  web: R --file=/app/biologbook/scripts/RestRserveAPI.R" --gui-none --no-save
+  console: R --no-save -e "print('Bio Logbook started')"
+EOF
+
 elif [ -f "${BUILD_DIR}/plumber.R" ]; then
     cat <<EOF
 ---
 default_process_types:
-  console: R --no-save
+  console: R --no-save -e "print('Bio Logbook started')"
   web: R --file=/app/plumber.R --gui-none --no-save
 EOF
 
@@ -36,7 +47,7 @@ else
     cat <<EOF
 ---
 default_process_types:
-  console: R --no-save
+  console: R --no-save -e "print('Bio Logbook started')"
 EOF
 
 fi
