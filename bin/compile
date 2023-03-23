@@ -48,75 +48,88 @@ echo "BUILD_DIR: "${BUILD_DIR}
 
 echo "APT_FILE_MANIFEST: "${APT_FILE_MANIFEST}
 
+echo "Installing R" $(date)
+if [ -f "${CACHE_DIR}/R-compiled-${R_VERSION}.tar.gz" ]; then
+    tar --extract  --gzip \
+        --file="${CACHE_DIR}/R-compiled-${R_VERSION}.tar.gz" \
+        --directory="app/R-${R_VERSION}"
 
-echo "----------------------------------->Install gfortran" $(date)
-# Use Apt buildpack to install gfortran
-cat <<EOF >>"${BUILD_DIR}/${APT_FILE_MANIFEST}"
-${gfortran_package}
-libgomp1
-EOF
-
-cd "${HOME}"
-apt_deps_buildpack_dir="$( mktemp apt_buildpack_XXXX )"
-# We only need a random name, so we can safely delete the file:
-rm "${apt_deps_buildpack_dir}"
-
-readonly apt_buildpack_url="https://github.com/Scalingo/apt-buildpack.git"
-git clone --depth=1 "${apt_buildpack_url}" "${apt_deps_buildpack_dir}"
-
-"${apt_deps_buildpack_dir}/bin/compile" \
-    "${BUILD_DIR}" "${CACHE_DIR}" "${ENV_DIR}"
-
-
-# Check if the apt-buildpack left behind an environment for
-# subsequent ones:
-if [ -e "${HOME}/${apt_deps_buildpack_dir}/export" ]; then
-    source "${HOME}/${apt_deps_buildpack_dir}/export"
-fi
-
-PATH="\$HOME/.apt/bin/x86_64-linux-gnu-gfortran:${PATH}"
-export PATH
-
-
-# ----
-# Download and compile R
-echo "----------------------------------->Download R" $(date)
-curl --silent --location \
-    --retry 6 --retry-connrefused --retry-delay 0 \
-    "${r_base_url}/R-${R_VERSION:0:1}/R-${R_VERSION}.tar.gz" \
-    --output "${CACHE_DIR}/R-${R_VERSION}.tar.gz"
+    echo "----------------------------------->R fetchted from cache" $(date)
+else
+    echo "----------------------------------->Install gfortran" $(date)
+    # Use Apt buildpack to install gfortran
+    cat <<EOF >>"${BUILD_DIR}/${APT_FILE_MANIFEST}"
+    ${gfortran_package}
+    libgomp1
+    EOF
     
-echo "----------------------------------->Extract R" $(date)
-
-tar --extract --gzip --file="${CACHE_DIR}/R-${R_VERSION}.tar.gz" \
-    --directory "${CACHE_DIR}"
-
-pushd "${CACHE_DIR}/R-${R_VERSION}"
-
-./configure \
-    FC="${gfortran_package}" LIBnn=lib \
-    --prefix="${BUILD_DIR}/R-${R_VERSION}" \
-    --libdir="${BUILD_DIR}/R-${R_VERSION}/lib" \
-    --enable-java=no \
-    --enable-R-shlib=yes \
-    --with-recommended-packages=no \
-    --without-x
+    cd "${HOME}"
+    apt_deps_buildpack_dir="$( mktemp apt_buildpack_XXXX )"
+    # We only need a random name, so we can safely delete the file:
+    rm "${apt_deps_buildpack_dir}"
     
-echo "----------------------------------->make" $(date)
-make FC="${gfortran_package}" -j8
+    readonly apt_buildpack_url="https://github.com/Scalingo/apt-buildpack.git"
+    git clone --depth=1 "${apt_buildpack_url}" "${apt_deps_buildpack_dir}"
+    
+    "${apt_deps_buildpack_dir}/bin/compile" \
+        "${BUILD_DIR}" "${CACHE_DIR}" "${ENV_DIR}"
+    
+    
+    # Check if the apt-buildpack left behind an environment for
+    # subsequent ones:
+    if [ -e "${HOME}/${apt_deps_buildpack_dir}/export" ]; then
+        source "${HOME}/${apt_deps_buildpack_dir}/export"
+    fi
+    
+    PATH="\$HOME/.apt/bin/x86_64-linux-gnu-gfortran:${PATH}"
+    export PATH
+    
+    
+    # ----
+    # Download and compile R
+    echo "----------------------------------->Download R" $(date)
+    curl --silent --location \
+        --retry 6 --retry-connrefused --retry-delay 0 \
+        "${r_base_url}/R-${R_VERSION:0:1}/R-${R_VERSION}.tar.gz" \
+        --output "${CACHE_DIR}/R-${R_VERSION}.tar.gz"
+        
+    echo "----------------------------------->Extract R" $(date)
+    
+    tar --extract --gzip --file="${CACHE_DIR}/R-${R_VERSION}.tar.gz" \
+        --directory "${CACHE_DIR}"
+    
+    pushd "${CACHE_DIR}/R-${R_VERSION}"
+    
+    ./configure \
+        FC="${gfortran_package}" LIBnn=lib \
+        --prefix="${BUILD_DIR}/R-${R_VERSION}" \
+        --libdir="${BUILD_DIR}/R-${R_VERSION}/lib" \
+        --enable-java=no \
+        --enable-R-shlib=yes \
+        --with-recommended-packages=no \
+        --without-x
+        
+    echo "----------------------------------->make" $(date)
+    make FC="${gfortran_package}" -j8
+    
+    echo "ls"
+    echo $(ls)
+    
+    echo "----------------------------------->make install" $(date)
+    
+    make install rhome="/app/R-${R_VERSION}"
+    
+    echo "ls /app/R-XXX" $(date)
+    echo $(ls /app/R-${R_VERSION})
+    echo "----------------------------------->make clean" $(date)
+    tar --create --verbose --gzip \
+                        --file="${CACHE_DIR}/R-compiled-${R_VERSION}.tar.gz" \
+                        "/app/R-${R_VERSION}"
+    make clean
+    
+    popd
 
-echo $(ls)
 
-echo "----------------------------------->make install" $(date)
-
-make install rhome="/app/R-${R_VERSION}"
-
-echo $(ls /app/R-${R_VERSION})
-echo "----------------------------------->make clean" $(date)
-
-make clean
-
-popd
 
 # `make install` put things in /app/R-version, which is likely to be removed.
 # So we copy these things back in $BUILD_DIR which is then "deployed" in /app
