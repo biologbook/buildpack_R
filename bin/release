@@ -23,7 +23,7 @@ elif [ -f "${BUILD_DIR}/app/app.R" ]; then
     cat <<EOF
 ---
 default_process_types:
-  console: R --no-save
+  console: R --no-save -e "print('Bio Logbook started')"
   web: R --file=/app/app.R --gui-none --no-save
 EOF
 
@@ -32,14 +32,14 @@ elif [ -f "${BUILD_DIR}/biologbook/scripts/RestRserveAPI.R" ]; then
 ---
 default_process_types:
   web: R --file=/app/biologbook/scripts/RestRserveAPI.R" --gui-none --no-save
-  console: R --no-save
+  console: R --no-save -e "print('Bio Logbook started')"
 EOF
 
 elif [ -f "${BUILD_DIR}/plumber.R" ]; then
     cat <<EOF
 ---
 default_process_types:
-  console: R --no-save
+  console: R --no-save -e "print('Bio Logbook started')"
   web: R --file=/app/plumber.R --gui-none --no-save
 EOF
 
@@ -47,7 +47,7 @@ else
     cat <<EOF
 ---
 default_process_types:
-  console: R --no-save
+  console: R --no-save -e "print('Bio Logbook started')"
 EOF
 
 fi
