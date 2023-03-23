@@ -61,7 +61,7 @@ else
     cat <<EOF >>"${BUILD_DIR}/${APT_FILE_MANIFEST}"
     ${gfortran_package}
     libgomp1
-    EOF
+EOF
     
     cd "${HOME}"
     apt_deps_buildpack_dir="$( mktemp apt_buildpack_XXXX )"
