@@ -7,6 +7,8 @@ then
     set -x
 fi
 
+echo ${BUILDPACK_URL}
+
 readonly BUILD_DIR="${1}"
 readonly CACHE_DIR="${2}"
 readonly ENV_DIR="${3}"
@@ -125,10 +127,12 @@ EOF
     
     echo "ls /app/R-XXX" $(date)
     echo $(ls /app/R-${R_VERSION})
-    echo "----------------------------------->make clean" $(date)
-    tar --create --verbose --gzip \
+    echo "----------------------------------->Archiving R version" $(date)
+    tar --create  --gzip \
                         --file="${CACHE_DIR}/R-compiled-${R_VERSION}.tar.gz" \
-                        "/app/R-${R_VERSION}"
+                        --directory="/app/R-${R_VERSION}"
+                        "."
+    echo "----------------------------------->make clean" $(date)                    
     make clean
     
     popd
