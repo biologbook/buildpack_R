@@ -8,20 +8,22 @@ BUILD_DIR="${1}"
 readonly BUILD_DIR
 
 
-if [ -f "${BUILD_DIR}/biologbook/scripts/RestRserveAPI.R" ]; then
-    cat <<EOF
----
-default_process_types:
-  web: R --file=/app/biologbook/scripts/RestRserveAPI.R" --gui-none --no-save
-  console: R --no-save
-EOF
 
-elif [ -f "${BUILD_DIR}/app.R" ]; then
+
+if [ -f "${BUILD_DIR}/app.R" ]; then
     cat <<EOF
 ---
 default_process_types:
   console: R --no-save
   web: R --file=/app/app.R --gui-none --no-save
+EOF
+
+elif [ -f "${BUILD_DIR}/biologbook/scripts/RestRserveAPI.R" ]; then
+    cat <<EOF
+---
+default_process_types:
+  web: R --file=/app/biologbook/scripts/RestRserveAPI.R" --gui-none --no-save
+  console: R --no-save
 EOF
 
 elif [ -f "${BUILD_DIR}/plumber.R" ]; then
