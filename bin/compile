@@ -51,7 +51,7 @@ echo "BUILD_DIR: "${BUILD_DIR}
 echo "APT_FILE_MANIFEST: "${APT_FILE_MANIFEST}
 
 echo "Installing R" $(date)
-if [ -f "${CACHE_DIR}/R-compiled-${R_VERSION}.tar.gz"] && [ "${USE_R_CACHE}" = true ]; then
+if [ -f "${CACHE_DIR}/R-compiled-${R_VERSION}.tar.gz" ] && [ "${USE_R_CACHE}" = true ]; then
     echo "R archive exists for version" ${R_VERSION} 
     pwd
     mkdir -p "/app/R-${R_VERSION}"
