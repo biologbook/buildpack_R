@@ -173,6 +173,7 @@ export PKG_CONFIG_PATH="$BUILD_DIR/.apt/usr/lib/x86_64-linux-gnu/pkgconfig:$BUIL
 # ---
 # Installing packages
 echo "----------------------------------->installing package" $(date)
+mkdir -p "/app/R-${R_VERSION}/library"
 if [ -f "${BUILD_DIR}/R-packages" ]; then
 
     while IFS=" " read -r pkg_name pkg_version; do
