@@ -11,6 +11,10 @@ readonly BUILD_DIR="${1}"
 readonly CACHE_DIR="${2}"
 readonly ENV_DIR="${3}"
 
+echo "BUILD_DIR: "${BUILD_DIR}
+echo "CACHE_DIR: "${CACHE_DIR}
+echo "ENV_DIR: "${ENV_DIR}
+
 BASE_DIR="$( cd -P "$( dirname "$0" )" && pwd )"
 readonly BASE_DIR
 
@@ -26,8 +30,8 @@ readonly r_package_url="${r_url}/package=%s&version=%s"
 
 readonly gfortran_package="gfortran-10"
 
-echo "APT_FILE_MANIFEST:"
-echo ${APT_FILE_MANIFEST}
+
+echo "APT_FILE_MANIFEST: "${APT_FILE_MANIFEST}
 
 readonly APT_FILE_MANIFEST="${APT_FILE_MANIFEST:-inst/scalingo/Aptfile.R}"
 export APT_FILE_MANIFEST
@@ -37,12 +41,12 @@ export APT_FILE_MANIFEST
 # Install gfortran to compile R
 
 echo "list of file in app project"
-echo $(ls)
-echo "BUILD_DIR:"
-echo ${BUILD_DIR}
+echo $(ls -al)
+echo "BUILD_DIR: "${BUILD_DIR}
 
-echo "APT_FILE_MANIFEST:"
-echo ${APT_FILE_MANIFEST}
+
+echo "APT_FILE_MANIFEST: "${APT_FILE_MANIFEST}
+
 
 # Use Apt buildpack to install gfortran
 cat <<EOF >>"${BUILD_DIR}/${APT_FILE_MANIFEST}"
