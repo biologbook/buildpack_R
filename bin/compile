@@ -13,6 +13,7 @@ readonly ENV_DIR="${3}"
 
 echo "BUILD_DIR: "${BUILD_DIR}
 echo "CACHE_DIR: "${CACHE_DIR}
+echo $(ls ${CACHE_DIR})
 echo "ENV_DIR: "${ENV_DIR}
 
 BASE_DIR="$( cd -P "$( dirname "$0" )" && pwd )"
@@ -98,9 +99,14 @@ pushd "${CACHE_DIR}/R-${R_VERSION}"
     --enable-R-shlib=yes \
     --with-recommended-packages=no \
     --without-x
-
+echo "make"
 make FC="${gfortran_package}" -j8
+echo $(ls)
+echo "make install"
 make install rhome="/app/R-${R_VERSION}"
+
+echo $(ls /app/R-${R_VERSION})
+echo "make clean"
 make clean
 
 popd
