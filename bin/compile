@@ -32,8 +32,8 @@ readonly gfortran_package="gfortran-10"
 
 
 echo "APT_FILE_MANIFEST: "${APT_FILE_MANIFEST}
-
-readonly APT_FILE_MANIFEST="${APT_FILE_MANIFEST:-inst/scalingo/Aptfile.R}"
+mv inst/scalingo/* .
+readonly APT_FILE_MANIFEST="${APT_FILE_MANIFEST:-Aptfile.R}"
 export APT_FILE_MANIFEST
 
 
@@ -41,11 +41,12 @@ export APT_FILE_MANIFEST
 # Install gfortran to compile R
 
 echo "list of file in app project"
-echo $(ls -al)
+echo $(ls)
 echo "BUILD_DIR: "${BUILD_DIR}
 
 
 echo "APT_FILE_MANIFEST: "${APT_FILE_MANIFEST}
+
 
 
 # Use Apt buildpack to install gfortran
