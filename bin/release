@@ -13,6 +13,7 @@ if [ -f "${BUILD_DIR}/run.R" ]; then
 ---
 default_process_types:
   web: R --file=/app/run.R --gui-none --no-save
+  postdeploy: cd biologbook/python_back; flask db upgrade
   console: R --no-save
 EOF
 
@@ -21,6 +22,7 @@ elif [ -f "${BUILD_DIR}/app.R" ]; then
 ---
 default_process_types:
   console: R --no-save
+  postdeploy: cd biologbook/python_back; flask db upgrade
   web: R --file=/app/app.R --gui-none --no-save
 EOF
 
@@ -29,6 +31,7 @@ elif [ -f "${BUILD_DIR}/plumber.R" ]; then
 ---
 default_process_types:
   console: R --no-save
+  postdeploy: cd biologbook/python_back; flask db upgrade
   web: R --file=/app/plumber.R --gui-none --no-save
 EOF
 
@@ -36,6 +39,7 @@ else
     cat <<EOF
 ---
 default_process_types:
+  postdeploy: cd biologbook/python_back; flask db upgrade
   console: R --no-save
 EOF
 
