@@ -8,7 +8,7 @@ then
 fi
 
 echo ${BUILDPACK_URL}
-
+echo 'PWD: " ${PWD}
 readonly BUILD_DIR="${1}"
 readonly CACHE_DIR="${2}"
 readonly ENV_DIR="${3}"
