@@ -33,6 +33,9 @@ readonly r_package_url="${r_url}/package=%s&version=%s"
 
 readonly gfortran_package="gfortran-10"
 
+echo "list of file in app project"
+echo $(ls)
+echo "BUILD_DIR: "${BUILD_DIR}
 
 echo "APT_FILE_MANIFEST: "${APT_FILE_MANIFEST}
 mv inst/scalingo/* .
@@ -43,9 +46,6 @@ export APT_FILE_MANIFEST
 # ----
 # Install gfortran to compile R
 
-echo "list of file in app project"
-echo $(ls)
-echo "BUILD_DIR: "${BUILD_DIR}
 
 
 echo "APT_FILE_MANIFEST: "${APT_FILE_MANIFEST}
