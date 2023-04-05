@@ -6,7 +6,10 @@ set -e
 
 BUILD_DIR="${1}"
 readonly BUILD_DIR
-
+cd $BUILD_DIR
+echo "current location"
+echo $PWD
+echo "Files in project"
 echo $(ls)
 
 if [ -f "${BUILD_DIR}/run.R" ] \
