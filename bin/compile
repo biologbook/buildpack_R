@@ -7,7 +7,14 @@ then
     set -x
 fi
 
+cd $BUILD_DIR
+echo "current location"
+echo $PWD
+echo "Files in project"
+echo $(ls)
 echo ${BUILDPACK_URL}
+echo "PWD: " ${PWD}
+
 
 readonly BUILD_DIR="${1}"
 readonly CACHE_DIR="${2}"
@@ -33,6 +40,9 @@ readonly r_package_url="${r_url}/package=%s&version=%s"
 
 readonly gfortran_package="gfortran-10"
 
+echo "list of file in app project"
+echo $(ls)
+echo "BUILD_DIR: "${BUILD_DIR}
 
 echo "APT_FILE_MANIFEST: "${APT_FILE_MANIFEST}
 mv inst/scalingo/* .
@@ -43,9 +53,6 @@ export APT_FILE_MANIFEST
 # ----
 # Install gfortran to compile R
 
-echo "list of file in app project"
-echo $(ls)
-echo "BUILD_DIR: "${BUILD_DIR}
 
 
 echo "APT_FILE_MANIFEST: "${APT_FILE_MANIFEST}
